@@ -31,7 +31,7 @@ struct Foobar {
 And you'll get a new initializer:
 
 ```swift
-let foobar = try Foobar(withJSON: """
+let foobar = try Foobar(fromJSON: """
 {
 	"numField": 100,
 	"stringArray": ["one", "two", "three"]
