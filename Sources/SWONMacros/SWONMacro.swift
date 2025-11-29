@@ -63,8 +63,7 @@ public struct SWONMacro: MemberMacro {
                     self = value
                     """)
             default:
-//                fatalError("Unsupported raw type '\(rawType)'")
-                break
+                fatalError("Unsupported raw type '\(rawType)'")
             }
         } else {
             // Parse struct fields
