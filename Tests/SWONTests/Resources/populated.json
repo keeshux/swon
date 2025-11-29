@@ -1,0 +1,72 @@
+{
+    "intValue": 42,
+    "doubleValue": 3.14,
+    "boolValue": true,
+    "stringValue": "Hello, world",
+
+    "optionalInt": 7,
+    "optionalDouble": 2.71,
+    "optionalBool": false,
+    "optionalString": "Optional text",
+
+    "intArray": [1, 2, 3],
+    "stringArray": ["a", "b", "c"],
+    "optionalDoubleArray": [0.1, 0.2, 0.3],
+
+    "nestedIntArray": [[1, 2], [3, 4]],
+
+    "stringToInt": {"one": 1, "two": 2},
+    "stringToString": {"key1": "value1", "key2": "value2"},
+    "optionalStringToBool": {"enabled": true, "disabled": false},
+
+    "stringToIntArray": {"numbers": [10, 20, 30]},
+
+    "nestedDictionary": {"group1": {"a": 1, "b": 2}},
+    "optionalNestedDictionary": {"group2": {"x": "X", "y": "Y"}},
+
+    "arrayOfDictionaries": [{"a": 1}, {"b": 2}],
+
+    "optionalNestedStruct": {
+        "favoriteColor": "red",
+        "optionalSize": 1,
+        "statusHistory": ["active", "pending"],
+        "colorToStatus": {"red": "active", "blue": "inactive"},
+        "optionalColorArray": ["green", "blue"]
+    },
+
+    "nestedStructArray": [
+        {
+            "favoriteColor": "green",
+            "optionalSize": 2,
+            "statusHistory": ["inactive"],
+            "colorToStatus": {"green": "inactive"},
+            "optionalColorArray": ["red"]
+        },
+        {
+            "favoriteColor": "blue",
+            "optionalSize": null,
+            "statusHistory": ["active", "pending"],
+            "colorToStatus": {"blue": "pending"},
+            "optionalColorArray": null
+        }
+    ],
+
+    "stringToSubStruct": {
+        "first": {
+            "favoriteColor": "red",
+            "optionalSize": 0,
+            "statusHistory": ["active"],
+            "colorToStatus": {"red": "active"},
+            "optionalColorArray": ["blue"]
+        }
+    },
+    "optionalStringToSubStruct": {
+        "second": {
+            "favoriteColor": "green",
+            "optionalSize": 1,
+            "statusHistory": ["inactive", "pending"],
+            "colorToStatus": {"green": "inactive"},
+            "optionalColorArray": null
+        }
+    }
+}

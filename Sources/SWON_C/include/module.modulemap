@@ -1,0 +1,8 @@
+// SPDX-FileCopyrightText: 2025 Davide De Rosa
+//
+// SPDX-License-Identifier: MIT
+
+module SWON_C {
+    header "swon.h"
+    export *
+}

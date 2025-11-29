@@ -1,0 +1,35 @@
+{
+    "intValue": 0,
+    "doubleValue": 0.0,
+    "boolValue": false,
+    "stringValue": "",
+
+    "optionalInt": null,
+    "optionalDouble": null,
+    "optionalBool": null,
+    "optionalString": null,
+
+    "intArray": [],
+    "stringArray": [],
+    "optionalDoubleArray": null,
+
+    "nestedIntArray": [],
+
+    "stringToInt": {},
+    "stringToString": {},
+    "optionalStringToBool": null,
+
+    "stringToIntArray": {},
+
+    "nestedDictionary": {},
+    "optionalNestedDictionary": null,
+
+    "arrayOfDictionaries": [],
+
+    "optionalNestedStruct": null,
+
+    "nestedStructArray": null,
+
+    "stringToSubStruct": {},
+    "optionalStringToSubStruct": null
+}

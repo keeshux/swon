@@ -1,0 +1,55 @@
+{
+    "intValue": 100,
+    "doubleValue": 99.9,
+    "boolValue": true,
+    "stringValue": "Partial test",
+
+    "optionalInt": 50,
+    "optionalDouble": null,
+    "optionalBool": true,
+    "optionalString": null,
+
+    "intArray": [5, 10, 15],
+    "stringArray": ["x", "y"],
+    "optionalDoubleArray": null,
+
+    "nestedIntArray": [[1], [2,3]],
+
+    "stringToInt": {"score": 100},
+    "stringToString": {"note": "ok"},
+    "optionalStringToBool": null,
+
+    "stringToIntArray": {"values": [7, 8, 9]},
+
+    "nestedDictionary": {"level1": {"sub": 1}},
+    "optionalNestedDictionary": null,
+
+    "arrayOfDictionaries": [{"a": 1}],
+
+    "optionalNestedStruct": {
+        "favoriteColor": "blue",
+        "optionalSize": null,
+        "statusHistory": ["pending"],
+        "colorToStatus": {"blue": "pending"},
+        "optionalColorArray": null
+    },
+
+    "nestedStructArray": [
+        {
+            "favoriteColor": "red",
+            "optionalSize": 0,
+            "statusHistory": ["active"],
+            "colorToStatus": {"red": "active"},
+            "optionalColorArray": ["green"]
+        }
+    ],
+    "stringToSubStruct": {
+        "alpha": {
+            "favoriteColor": "red",
+            "optionalSize": 1,
+            "statusHistory": ["active"],
+            "colorToStatus": {"red": "active"},
+            "optionalColorArray": null
+        }
+    }
+}
