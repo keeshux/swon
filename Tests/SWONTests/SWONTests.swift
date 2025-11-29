@@ -8,7 +8,7 @@ import Testing
 
 struct SWONTests {
     @Test(arguments: ["populated", "minimal", "partial"])
-    func populated(filename: String) throws {
+    func featureParity(filename: String) throws {
         let json = try jsonString(fromFileNamed: filename)
         let parsed = try ComplexStruct.withSWON(json)
         let foundationParsed = try ComplexStruct.withFoundation(json)
