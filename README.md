@@ -63,6 +63,7 @@ SWON uses the amazingly written [cJSON][credits-cjson] parser (C) under the hood
 
 - Encode Swift to JSON (decode-only for now).
 - Enums with associated types.
+- Do not suppress errors inside an optional field (silently made nil).
 
 ## License
 
