@@ -6,8 +6,8 @@ import SwiftDiagnostics
 import SwiftSyntax
 import SwiftSyntaxMacros
 
-public struct SWONMacro: MemberMacro {
-    public static func expansion(
+struct SWONDecodeMacro: MemberMacro {
+    static func expansion(
         of node: AttributeSyntax,
         providingMembersOf declaration: some DeclGroupSyntax,
         conformingTo protocols: [TypeSyntax],
@@ -23,7 +23,7 @@ public struct SWONMacro: MemberMacro {
                 $0.decl.as(VariableDeclSyntax.self)
             }
             .filter { variable in
-                variable.bindings.first?.initializer == nil // ignore default-init vars
+                variable.bindings.first?.initializer == nil // Ignore default-init vars
             }
 
         var assignments: [String] = []
@@ -39,14 +39,14 @@ public struct SWONMacro: MemberMacro {
 //            context.diagnose(
 //                Diagnostic(
 //                    node: Syntax(node),
-//                    message: SWONMessage(message: "Raw type of enum \(enumDecl.name.text) is \(rawType)")
+//                    message: SWONMessage(message: "Raw type of enum \(enumType) is \(rawType)")
 //                )
 //            )
             switch rawType {
             case "String":
                 assignments.append("""
                     var str: UnsafePointer<CChar>!
-                    try swon_get_string(root, &str).check("\(enumType)")
+                    try swon_get_string(&str, root).check("\(enumType)")
                     let rawValue = String(cString: str)
                     guard let value = \(enumType)(rawValue: rawValue) else {
                         throw SWONError.invalid("\(enumType).\\(rawValue)")
@@ -56,7 +56,7 @@ public struct SWONMacro: MemberMacro {
             case "Int":
                 assignments.append("""
                     var num: Int32 = 0
-                    try swon_get_integer(root, &num).check("\(enumType)")
+                    try swon_get_integer(&num, root).check("\(enumType)")
                     guard let value = \(enumType)(rawValue: Int(num)) else {
                         throw SWONError.invalid("\(enumType).\\(num)")
                     }
@@ -83,7 +83,7 @@ public struct SWONMacro: MemberMacro {
                 assignments.append("""
                 \(field) = try\(type.isOptional ? "?" : "") {
                     var item = swon_t()
-                    let itemResult = swon_get_object(root, "\(field)", &item)
+                    let itemResult = swon_get_object(&item, root, "\(field)")
                     try itemResult.check("\(field)")
                     \(mapItem(to: type.decodedType(context: context), fieldName: field, varName: "item", nesting: 0, isOptional: type.isOptional))
                 }()
@@ -99,12 +99,10 @@ public struct SWONMacro: MemberMacro {
             DeclSyntax(stringLiteral: """
                 init(fromJSON json: String) throws {
                     var root = swon_t()
-                    guard swon_create(json, &root) == SWONResultValid else {
+                    defer { swon_free(&root) }
+                    guard swon_parse(&root, json) == SWONResultValid else {
                         let message = String(cString: swon_error_ptr())
                         throw SWONError.invalid("At \\(message)")
-                    }
-                    defer {
-                        swon_free(root)
                     }
                     try self.init(fromSWON: root)
                 }
@@ -113,9 +111,8 @@ public struct SWONMacro: MemberMacro {
     }
 }
 
-private extension SWONMacro {
+private extension SWONDecodeMacro {
     static func mapItem(to type: DecodedType, fieldName: String, varName: String, nesting: Int, isOptional: Bool) -> String {
-        let typeExpr: String
         switch type {
         case .scalar(let typeName):
             let checkExpr = """
@@ -128,49 +125,47 @@ private extension SWONMacro {
                     throw SWONError.invalid("\(fieldName)")
                 }
                 """
-            typeExpr = {
-                switch typeName {
-                case "String":
-                    return """
-                        var str: UnsafePointer<CChar>!
-                        let result = swon_get_string(\(varName), &str)
-                        \(checkExpr)
-                        return String(cString: str)
-                        """
-                case "Int":
-                    return """
-                        var num: Int32 = 0
-                        let result = swon_get_integer(\(varName), &num)
-                        \(checkExpr)
-                        return Int(num)
-                        """
-                case "Double":
-                    return """
-                        var num: Double = 0
-                        let result = swon_get_number(\(varName), &num)
-                        \(checkExpr)
-                        return num
-                        """
-                case "Bool":
-                    return """
-                        var bool = false
-                        let result = swon_get_bool(\(varName), &bool)
-                        \(checkExpr)
-                        return bool
-                        """
-                default:
-                    return "return try \(typeName)(fromSWON: \(varName))"
-                }
-            }()
+            switch typeName {
+            case "String":
+                return """
+                    var str: UnsafePointer<CChar>!
+                    let result = swon_get_string(&str, \(varName))
+                    \(checkExpr)
+                    return String(cString: str)
+                    """
+            case "Int":
+                return """
+                    var num: Int32 = 0
+                    let result = swon_get_integer(&num, \(varName))
+                    \(checkExpr)
+                    return Int(num)
+                    """
+            case "Double":
+                return """
+                    var num: Double = 0
+                    let result = swon_get_number(&num, \(varName))
+                    \(checkExpr)
+                    return num
+                    """
+            case "Bool":
+                return """
+                    var bool = false
+                    let result = swon_get_bool(&bool, \(varName))
+                    \(checkExpr)
+                    return bool
+                    """
+            default:
+                return "return try \(typeName)(fromSWON: \(varName))"
+            }
         case .optional(let wrappedType):
-            typeExpr = mapItem(to: wrappedType, fieldName: fieldName, varName: varName, nesting: nesting, isOptional: true)
+            return mapItem(to: wrappedType, fieldName: fieldName, varName: varName, nesting: nesting, isOptional: true)
         case .array(let elementType):
-            typeExpr = """
+            return """
                 var list: [\(elementType.description)] = []
                 let size = swon_get_array_size(\(varName))
                 for i in 0..<size {
                     var arrayElement\(nesting) = swon_t()
-                    switch swon_get_array_item(\(varName), Int32(i), &arrayElement\(nesting)) {
+                    switch swon_get_array_item(&arrayElement\(nesting), \(varName), Int32(i)) {
                     case SWONResultValid:
                         break
                     default:
@@ -187,7 +182,7 @@ private extension SWONMacro {
             guard case .scalar(let keyTypeName) = key, keyTypeName == "String" else {
                 fatalError("Expected string keys")
             }
-            typeExpr = """
+            return """
                 var map: [\(keyTypeName): \(valueType.description)] = [:]
                 var mapElement\(nesting) = swon_get_map_first(\(varName))
                 while swon_get_map_exists(mapElement\(nesting)) {
@@ -202,74 +197,5 @@ private extension SWONMacro {
                 return map
                 """
         }
-        return """
-            \(typeExpr)
-            """
-    }
-}
-
-// MARK: - Helpers
-
-indirect enum DecodedType {
-    case scalar(_ name: String)
-    case array(_ element: DecodedType)
-    case dictionary(key: DecodedType, value: DecodedType)
-    case optional(DecodedType)
-}
-
-extension DecodedType {
-    var description: String {
-        switch self {
-        case .scalar(let name):
-            return name
-        case .array(let element):
-            return "[\(element.description)]"
-        case .dictionary(let key, let value):
-            return "[\(key.description): \(value.description)]"
-        case .optional(let wrapped):
-            switch wrapped {
-            case .scalar(let name):
-                return "\(name)?"
-            default:
-                return "\(wrapped.description)?"
-            }
-        }
-    }
-}
-
-extension TypeSyntax {
-    func decodedType(context: some MacroExpansionContext) -> DecodedType {
-        switch `as`(TypeSyntaxEnum.self) {
-        case .identifierType(let id):
-            return .scalar(id.name.text)
-        case .memberType(let m):
-            return .scalar(m.description)
-        case .arrayType(let arr):
-            return .array(arr.element.decodedType(context: context))
-        case .dictionaryType(let dict):
-            return .dictionary(
-                key: dict.key.decodedType(context: context),
-                value: dict.value.decodedType(context: context)
-            )
-        case .optionalType(let opt):
-            return .optional(opt.wrappedType.decodedType(context: context))
-        default:
-            return .scalar(description)
-        }
-    }
-
-    var isOptional: Bool {
-        guard case .optionalType = `as`(TypeSyntaxEnum.self) else {
-            return false
-        }
-        return true
-    }
-}
-
-struct SWONMessage: DiagnosticMessage {
-    let severity: DiagnosticSeverity = .note
-    let message: String
-    var diagnosticID: MessageID {
-        MessageID(domain: "SWONMessage", id: "debug")
     }
 }
