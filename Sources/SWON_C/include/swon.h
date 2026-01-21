@@ -8,7 +8,6 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include "cJSON.h"
 
 typedef struct {
     void *impl;
