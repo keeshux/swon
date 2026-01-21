@@ -83,7 +83,7 @@ struct SWONEncodeMacro: MemberMacro {
                     varName: field,
                     parentName: "root",
                     nesting: 0,
-                    isOptional: type.isOptional
+                    category: type.isOptional ? .optional : .none
                 )
                 assignments.append(contentsOf: stmts)
             }
@@ -132,12 +132,10 @@ private extension SWONEncodeMacro {
         varName: String,
         parentName: String,
         nesting: Int,
-        isOptional: Bool,
-        isCollection: Bool = false,
-        isPair: Bool = false
+        category: TypeCategory
     ) -> [String] {
         var stmts: [String] = []
-        if isOptional {
+        if category == .optional {
             stmts.append("if let \(varName) {")
         }
         switch type {
@@ -157,7 +155,7 @@ private extension SWONEncodeMacro {
                 varName: varName,
                 parentName: parentName,
                 nesting: nesting,
-                isOptional: true
+                category: .optional
             )
         case .array(let elementType):
             let elementName = "element\(nesting)"
@@ -172,8 +170,7 @@ private extension SWONEncodeMacro {
                         varName: elementName,
                         parentName: parentName,
                         nesting: nesting + 1,
-                        isOptional: false,
-                        isCollection: true
+                        category: .array
                     )
                 case .dictionary:
                     return mapItem(
@@ -181,8 +178,7 @@ private extension SWONEncodeMacro {
                         varName: elementName,
                         parentName: parentName,
                         nesting: nesting + 1,
-                        isOptional: false,
-                        isCollection: true
+                        category: .array
                     )
                 case .scalar:
                     return elementType.statements(
@@ -197,7 +193,7 @@ private extension SWONEncodeMacro {
                 guard swon_create_array(&\(varName)JSON) else {
                     throw SWONError.invalid("Unable to create array in \(parentName) (\(varName)JSON)")
                 }
-                for element\(nesting) in \(varName)\(isPair ? ".value" : "") {
+                for element\(nesting) in \(varName)\(category == .dictionary ? ".value" : "") {
                     do {
                         \(itemExpr.joined(separator: "\n"))
                         guard swon_array_add_item(&\(varName)JSON, \(itemName)) else {
@@ -210,7 +206,7 @@ private extension SWONEncodeMacro {
                     }
                 }
                 """)
-            if !isCollection {
+            if !category.isCollection {
                 stmts.append("""
                     guard swon_object_add_item(&\(parentName), "\(varName)", \(varName)JSON) else {
                         swon_free(&\(varName)JSON)
@@ -234,9 +230,7 @@ private extension SWONEncodeMacro {
                         varName: elementName,
                         parentName: parentName,
                         nesting: nesting + 1,
-                        isOptional: false,
-                        isCollection: true,
-                        isPair: true
+                        category: .dictionary
                     )
                 case .dictionary:
                     return mapItem(
@@ -244,9 +238,7 @@ private extension SWONEncodeMacro {
                         varName: elementName,
                         parentName: parentName,
                         nesting: nesting + 1,
-                        isOptional: false,
-                        isCollection: true,
-                        isPair: true
+                        category: .dictionary
                     )
                 case .scalar:
                     return valueType.statements(
@@ -261,7 +253,7 @@ private extension SWONEncodeMacro {
                 guard swon_create_object(&\(varName)JSON) else {
                     throw SWONError.invalid("Unable to create object in \(parentName)")
                 }
-                for element\(nesting) in \(varName)\(isPair ? ".value" : "") {
+                for element\(nesting) in \(varName)\(category == .dictionary ? ".value" : "") {
                     \(itemExpr.joined(separator: "\n"))
                     do {
                         guard swon_object_add_item(&\(varName)JSON, element\(nesting).key, \(itemName)) else {
@@ -274,7 +266,7 @@ private extension SWONEncodeMacro {
                     }
                 }
                 """)
-            if !isCollection {
+            if !category.isCollection {
                 stmts.append("""
                     guard swon_object_add_item(&\(parentName), \"\(varName)\", \(varName)JSON) else {
                         swon_free(&\(varName)JSON)
@@ -283,7 +275,7 @@ private extension SWONEncodeMacro {
                     """)
             }
         }
-        if isOptional {
+        if category == .optional {
             stmts.append("}")
         }
         return stmts
@@ -314,5 +306,21 @@ private extension DecodedType {
             stmts.append("}")
         }
         return stmts
+    }
+}
+
+private enum TypeCategory {
+    case none
+    case optional
+    case array
+    case dictionary
+
+    var isCollection: Bool {
+        switch self {
+        case .array, .dictionary:
+            return true
+        default:
+            return false
+        }
     }
 }
