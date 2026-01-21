@@ -1,0 +1,23 @@
+name: SwiftPM Tests
+
+on:
+  pull_request:
+    types: [ opened, synchronize ]
+    branches:
+      - "master"
+    paths-ignore:
+      - "README.md"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  run_swift_tests:
+    name: Run SwiftPM tests
+    runs-on: macos-26
+    timeout-minutes: 10
+    steps:
+      - uses: partout-io/action-prepare-xcode-build@master
+      - run: |
+          swift test
