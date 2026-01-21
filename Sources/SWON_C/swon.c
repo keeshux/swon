@@ -17,91 +17,139 @@
 #define SWON_RETURN_RESULT_IF_INVALID(r) if (r != SWONResultValid) return r;
 #define SWON_RETURN_INVALID_IF(expr) if (expr) return SWONResultInvalid;
 
-swon_result swon_create(const char *text, swon_t *root) {
+swon_result swon_parse(swon_t *dst, const char *text) {
     cJSON *ret = cJSON_Parse(text);
     SWON_RETURN_IF_NULL(ret)
-    root->impl = ret;
+    dst->impl = ret;
     return SWONResultValid;
 }
 
-void swon_free(swon_t root) {
-    free(root.impl);
+const char *swon_parse_error_ptr() {
+    return cJSON_GetErrorPtr();
 }
 
-swon_result swon_get_object(swon_t json, const char *field, swon_t *object) {
-    cJSON *item = cJSON_GetObjectItemCaseSensitive(json.impl, field);
+char *swon_encode(swon_t src) {
+    return cJSON_PrintUnformatted(src.impl);
+}
+
+void swon_free_string(char *string) {
+    if (!string) return;
+    cJSON_free(string);
+}
+
+void swon_free(swon_t *dst) {
+    if (!dst->impl) return;
+    cJSON_Delete(dst->impl);
+}
+
+swon_result swon_get_object(swon_t *dst, swon_t src, const char *field) {
+    cJSON *item = cJSON_GetObjectItemCaseSensitive(src.impl, field);
     SWON_RETURN_IF_NULL(item)
-    object->impl = item;
+    dst->impl = item;
     return SWONResultValid;
 }
 
-swon_result swon_get_number(swon_t json, double *value) {
-    SWON_RETURN_IF_NULL(json.impl)
-    SWON_RETURN_INVALID_IF(!cJSON_IsNumber(json.impl))
-    *value = cJSON_GetNumberValue(json.impl);
+swon_result swon_get_number(double *dst, swon_t src) {
+    SWON_RETURN_IF_NULL(src.impl)
+    SWON_RETURN_INVALID_IF(!cJSON_IsNumber(src.impl))
+    *dst = cJSON_GetNumberValue(src.impl);
     return SWONResultValid;
 }
 
-swon_result swon_get_integer(swon_t json, int *value) {
+swon_result swon_get_integer(int *dst, swon_t src) {
     double double_value;
-    const swon_result result = swon_get_number(json, &double_value);
+    const swon_result result = swon_get_number(&double_value, src);
     if (result != SWONResultValid) return result;
-    *value = (int)double_value;
+    *dst = (int)double_value;
     return SWONResultValid;
 }
 
-swon_result swon_get_bool(swon_t json, bool *value) {
-    SWON_RETURN_IF_NULL(json.impl)
-    SWON_RETURN_INVALID_IF(!cJSON_IsBool(json.impl))
-    *value = cJSON_IsTrue(json.impl);
+swon_result swon_get_bool(bool *dst, swon_t src) {
+    SWON_RETURN_IF_NULL(src.impl)
+    SWON_RETURN_INVALID_IF(!cJSON_IsBool(src.impl))
+    *dst = cJSON_IsTrue(src.impl);
     return SWONResultValid;
 }
 
-swon_result swon_get_string(swon_t json, const char **value) {
-    SWON_RETURN_IF_NULL(json.impl)
-    SWON_RETURN_INVALID_IF(!cJSON_IsString(json.impl))
-    *value = cJSON_GetStringValue(json.impl);
+swon_result swon_get_string(const char **dst, swon_t src) {
+    SWON_RETURN_IF_NULL(src.impl)
+    SWON_RETURN_INVALID_IF(!cJSON_IsString(src.impl))
+    *dst = cJSON_GetStringValue(src.impl);
     return SWONResultValid;
 }
 
-swon_result swon_get_array(swon_t json, swon_t *array) {
-    SWON_RETURN_IF_NULL(json.impl)
-    SWON_RETURN_INVALID_IF(!cJSON_IsArray(json.impl))
-    array->impl = json.impl;
+swon_result swon_get_array(swon_t *dst, swon_t src) {
+    SWON_RETURN_IF_NULL(src.impl)
+    SWON_RETURN_INVALID_IF(!cJSON_IsArray(src.impl))
+    dst->impl = src.impl;
     return SWONResultValid;
 }
 
-size_t swon_get_array_size(swon_t json) {
-    if (cJSON_IsNull(json.impl) || !cJSON_IsArray(json.impl)) return 0;
-    return cJSON_GetArraySize(json.impl);
+size_t swon_get_array_size(swon_t src) {
+    if (cJSON_IsNull(src.impl) || !cJSON_IsArray(src.impl)) return 0;
+    return cJSON_GetArraySize(src.impl);
 }
 
-swon_result swon_get_array_item(swon_t json, int index, swon_t *object) {
-    SWON_RETURN_IF_NULL(json.impl)
-    SWON_RETURN_INVALID_IF(!cJSON_IsArray(json.impl))
-    object->impl = cJSON_GetArrayItem(json.impl, index);
+swon_result swon_get_array_item(swon_t *object, swon_t src, int index) {
+    SWON_RETURN_IF_NULL(src.impl)
+    SWON_RETURN_INVALID_IF(!cJSON_IsArray(src.impl))
+    object->impl = cJSON_GetArrayItem(src.impl, index);
     return SWONResultValid;
 }
 
-swon_t swon_get_map_first(swon_t json) {
-    swon_t child = { ((cJSON *)json.impl)->child };
+swon_t swon_get_map_first(swon_t src) {
+    swon_t child = { ((cJSON *)src.impl)->child };
     return child;
 }
 
-bool swon_get_map_exists(swon_t json) {
-    return (cJSON *)json.impl != NULL;
+bool swon_get_map_exists(swon_t src) {
+    return (cJSON *)src.impl != NULL;
 }
 
-const char *swon_get_map_key(swon_t json) {
-    if (!json.impl) return NULL;
-    return ((cJSON *)json.impl)->string;
+const char *swon_get_map_key(swon_t src) {
+    if (!src.impl) return NULL;
+    return ((cJSON *)src.impl)->string;
 }
 
-swon_t swon_get_map_next(swon_t json) {
-    swon_t next = { ((cJSON *)json.impl)->next };
+swon_t swon_get_map_next(swon_t src) {
+    swon_t next = { ((cJSON *)src.impl)->next };
     return next;
 }
 
-const char *swon_error_ptr() {
-    return cJSON_GetErrorPtr();
+bool swon_create_array(swon_t *dst) {
+    dst->impl = cJSON_CreateArray();
+    return dst->impl;
+}
+
+bool swon_array_add_item(swon_t *dst, swon_t item) {
+    return cJSON_AddItemToArray(dst->impl, item.impl);
+}
+
+bool swon_create_object(swon_t *dst) {
+    dst->impl = cJSON_CreateObject();
+    return dst->impl;
+}
+
+bool swon_object_add_item(swon_t *dst, const char *field, swon_t item) {
+    return cJSON_AddItemToObject(dst->impl, field, item.impl);
+}
+
+bool swon_create_number(swon_t *dst, double value) {
+    dst->impl = cJSON_CreateNumber(value);
+    return dst;
+}
+
+bool swon_create_integer(swon_t *dst, int value) {
+    dst->impl = cJSON_CreateNumber(value);
+    return dst;
+}
+
+bool swon_create_bool(swon_t *dst, bool value) {
+    dst->impl = cJSON_CreateBool(value);
+    return dst;
+}
+
+bool swon_create_string(swon_t *dst, const char *value) {
+    dst->impl = cJSON_CreateString(value);
+    return dst;
 }

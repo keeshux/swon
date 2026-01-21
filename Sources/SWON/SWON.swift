@@ -4,7 +4,12 @@
 
 @_exported import SWON_C
 
-@attached(member, names: named(init(fromSWON:)), named(init(fromJSON:)))
+@attached(member, names:
+            named(init(fromSWON:)),
+            named(init(fromJSON:)),
+            named(toSWON),
+            named(toJSON)
+)
 public macro SWON() = #externalMacro(
     module: "SWONMacros",
     type: "SWONMacro"
@@ -13,7 +18,6 @@ public macro SWON() = #externalMacro(
 public enum SWONError: Error {
     case required(String)
     case invalid(String)
-    case message(String)
 }
 
 extension swon_result {
