@@ -18,6 +18,9 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 10
     steps:
-      - uses: partout-io/action-prepare-xcode-build@master
+      - uses: actions/checkout@v4
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: 26.1
       - run: |
           swift test
