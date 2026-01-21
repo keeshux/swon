@@ -37,12 +37,12 @@ struct SWONEncodeMacro: MemberMacro {
             }
             let enumType = enumDecl.name.text
             let rawType = inheritedType.type.description
-            context.diagnose(
-                Diagnostic(
-                    node: Syntax(node),
-                    message: SWONMessage(message: "Raw type of enum \(enumType) is \(rawType)")
-                )
-            )
+//            context.diagnose(
+//                Diagnostic(
+//                    node: Syntax(node),
+//                    message: SWONMessage(message: "Raw type of enum \(enumType) is \(rawType)")
+//                )
+//            )
             switch rawType {
             case "String":
                 assignments.append("""
@@ -72,12 +72,12 @@ struct SWONEncodeMacro: MemberMacro {
                 guard let type = prop.bindings.first?.typeAnnotation?.type else {
                     continue
                 }
-                context.diagnose(
-                    Diagnostic(
-                        node: Syntax(node),
-                        message: SWONMessage(message: "Assigning \(field) of type \(type)")
-                    )
-                )
+//                context.diagnose(
+//                    Diagnostic(
+//                        node: Syntax(node),
+//                        message: SWONMessage(message: "Assigning \(field) of type \(type)")
+//                    )
+//                )
                 let stmts = mapItem(
                     to: type.decodedType(context: context),
                     varName: field,
@@ -89,12 +89,12 @@ struct SWONEncodeMacro: MemberMacro {
             }
             assignments.append("return root")
         }
-        context.diagnose(
-            Diagnostic(
-                node: Syntax(node),
-                message: SWONMessage(message: "Assignments: \(assignments)")
-            )
-        )
+//        context.diagnose(
+//            Diagnostic(
+//                node: Syntax(node),
+//                message: SWONMessage(message: "Assignments: \(assignments)")
+//            )
+//        )
         return [
             DeclSyntax(stringLiteral: """
                 func toSWON() throws -> swon_t {
