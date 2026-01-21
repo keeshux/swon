@@ -29,42 +29,121 @@ struct SWONEncodeMacro: MemberMacro {
 
         var assignments: [String] = []
 
-        // Parse enum from raw value
         if let enumDecl = declaration.as(EnumDeclSyntax.self) {
-            guard let inheritance = enumDecl.inheritanceClause,
-                  let inheritedType = inheritance.inheritedTypes.first else {
-                fatalError("Enumeration must inherit a raw type")
-            }
             let enumType = enumDecl.name.text
-            let rawType = inheritedType.type.description
-//            context.diagnose(
-//                Diagnostic(
-//                    node: Syntax(node),
-//                    message: SWONMessage(message: "Raw type of enum \(enumType) is \(rawType)")
+
+            // Enum with associated values
+            if enumDecl.hasAssociatedValues {
+                let cases = enumDecl.cases
+//                context.diagnose(
+//                    Diagnostic(
+//                        node: Syntax(node),
+//                        message: SWONMessage(message: "Associated cases of enum \(enumType): \(cases.map(\.description))")
+//                    )
 //                )
-//            )
-            switch rawType {
-            case "String":
-                assignments.append("""
-                    var item = swon_t()
-                    guard rawValue.withCString({ swon_create_string(&item, $0) }) else {
+                assignments.append("switch self {")
+                cases.forEach {
+                    for el in $0.elements {
+                        // Parameters of the case
+                        guard let parms = el.parameterClause?.parameters, !parms.isEmpty else {
+                            assignments.append("case .\(el.name):")
+                            // Empty dictionary with el name
+                            assignments.append("""
+                                var empty = swon_t()
+                                guard swon_create_object(&empty) else {
+                                    throw SWONError.invalid("Unable to create empty dictionary (\(el.name))")
+                                }
+                                guard swon_object_add_item(&root, "\(el.name)", empty) else {
+                                    swon_free(&empty)
+                                    throw SWONError.invalid("Unable to set root[\(el.name)]")
+                                }
+                                """)
+                            continue
+                        }
+                        // Iterate through parameters
+                        var parmVars: [String] = []
+                        var parmDeclarations: [String] = []
+                        var parmAssignments: [String] = []
+                        parms.enumerated().forEach { i, p in
+                            let name = p.firstName?.description ?? "_\(i)"
+                            let type = p.type.decodedType(context: context)
+                            parmVars.append(name)
+                            parmDeclarations.append("let \(name)")
+                            parmAssignments.append(
+                                contentsOf: type.statements(
+                                    forName: "\(name)JSON",
+                                    element: name,
+                                    pair: false,
+                                    withDeclaration: false
+                                )
+                            )
+                        }
+                        let parmDeclarationList = parmDeclarations.joined(separator: ",")
+                        assignments.append("case .\(el.name)(\(parmDeclarationList)):")
+                        assignments.append("var item = swon_t()")
+                        parmVars.forEach {
+                            assignments.append("var \($0)JSON = swon_t()")
+                        }
+                        assignments.append("do {")
+                        assignments.append("""
+                            guard swon_create_object(&item) else {
+                                throw SWONError.invalid("Unable to create root[\(el.name)]")
+                            }
+                            """)
+                        assignments.append(contentsOf: parmAssignments)
+                        parmVars.forEach {
+                            assignments.append("""
+                                guard swon_object_add_item(&item, \"\($0)\", \($0)JSON) else {
+                                    throw SWONError.invalid("Unable to set root[\(el.name)][\($0)]")
+                                }
+                                """)
+                        }
+                        assignments.append("""
+                            guard swon_object_add_item(&root, \"\(el.name)\", item) else {
+                                throw SWONError.invalid("Unable to set root[\(el.name)]")
+                            }
+                            """)
+                        assignments.append("} catch {")
+                        assignments.append("swon_free(&item)")
+                        parmVars.forEach {
+                            assignments.append("swon_free(&\($0)JSON)")
+                        }
+                        assignments.append("throw error")
+                        assignments.append("}")
+                    }
+                }
+                assignments.append("}")
+            }
+            // Enum with raw value
+            else if let inheritedType = enumDecl.inheritanceClause?.inheritedTypes.first {
+                let rawType = inheritedType.type.description
+//                context.diagnose(
+//                    Diagnostic(
+//                        node: Syntax(node),
+//                        message: SWONMessage(message: "Raw type of enum \(enumType) is \(rawType)")
+//                    )
+//                )
+                switch rawType {
+                case "String":
+                    assignments.append("""
+                    var root = swon_t()
+                    guard swon_create_string(&root, rawValue) else {
                         throw SWONError.invalid("\(enumType)(String)")
                     }
-                    return item
                     """)
-            case "Int":
-                assignments.append("""
-                    var item = swon_t()
-                    guard swon_create_number(&item, Double(rawValue)) else {
+                case "Int":
+                    assignments.append("""
+                    var root = swon_t()
+                    guard swon_create_number(&root, Double(rawValue)) else {
                         throw SWONError.invalid("\(enumType)(Int)")
                     }
-                    return item
                     """)
-            default:
-                fatalError("Unsupported raw type '\(rawType)'")
+                default:
+                    fatalError("Unsupported raw type '\(rawType)'")
+                }
             }
         } else {
-            // Parse struct fields
+            // Struct fields
             for prop in properties {
                 guard let field = prop.bindings.first?.pattern.as(IdentifierPatternSyntax.self)?.identifier.text else {
                     continue
@@ -87,8 +166,8 @@ struct SWONEncodeMacro: MemberMacro {
                 )
                 assignments.append(contentsOf: stmts)
             }
-            assignments.append("return root")
         }
+        assignments.append("return root")
 //        context.diagnose(
 //            Diagnostic(
 //                node: Syntax(node),
@@ -283,11 +362,18 @@ private extension SWONEncodeMacro {
 }
 
 private extension DecodedType {
-    func statements(forName name: String, element: String, pair: Bool) -> [String] {
+    func statements(
+        forName name: String,
+        element: String,
+        pair: Bool,
+        withDeclaration: Bool = true
+    ) -> [String] {
         var stmts: [String] = []
         let suffix = pair ? ".value" : ""
         var isScalar = true
-        stmts.append("var \(name) = swon_t()")
+        if withDeclaration {
+            stmts.append("var \(name) = swon_t()")
+        }
         switch description {
         case "Bool":
             stmts.append("guard swon_create_bool(&\(name), \(element)\(suffix)) else {")

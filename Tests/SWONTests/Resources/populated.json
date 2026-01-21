@@ -88,7 +88,47 @@
             "optionalSize": null,
             "statusHistory": ["active", "pending"],
             "colorToStatus": {"blue": "pending"},
-            "optionalColorArray": null
+            "optionalColorArray": null,
+            "assEnum": [
+                {
+                    "single": {}
+                },
+                {
+                    "singleFlat": {
+                        "_0": "Value"
+                    }
+                },
+                {
+                    "singleKeyed": {
+                        "i": 42
+                    }
+                },
+                {
+                    "multipleFlat": {
+                        "_0": 100,
+                        "_1": true
+                    }
+                },
+                {
+                    "multipleKeyed": {
+                        "d": 3.14,
+                        "b": false
+                    }
+                },
+                {
+                    "multipleMixed": {
+                        "d": 1.5,
+                        "_1": true,
+                        "foo": {
+                            "favoriteColor": "blue",
+                            "optionalSize": null,
+                            "statusHistory": ["active", "pending"],
+                            "colorToStatus": {"blue": "pending"},
+                            "optionalColorArray": null
+                        }
+                    }
+                }
+            ]
         }]
     }
 }
