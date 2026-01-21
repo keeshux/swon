@@ -20,6 +20,8 @@ typedef enum {
 } swon_result;
 
 swon_result swon_parse(swon_t *dst, const char *text);
+const char *swon_parse_error_ptr();
+
 char *swon_encode(swon_t src);
 void swon_free_string(char *string);
 void swon_free(swon_t *dst);
@@ -49,5 +51,3 @@ bool swon_create_number(swon_t *dst, double value);
 bool swon_create_integer(swon_t *dst, int value);
 bool swon_create_bool(swon_t *dst, bool value);
 bool swon_create_string(swon_t *dst, const char *value);
-
-const char *swon_error_ptr();

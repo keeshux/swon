@@ -101,7 +101,7 @@ struct SWONDecodeMacro: MemberMacro {
                     var root = swon_t()
                     defer { swon_free(&root) }
                     guard swon_parse(&root, json) == SWONResultValid else {
-                        let message = String(cString: swon_error_ptr())
+                        let message = String(cString: swon_parse_error_ptr())
                         throw SWONError.invalid("At \\(message)")
                     }
                     try self.init(fromSWON: root)

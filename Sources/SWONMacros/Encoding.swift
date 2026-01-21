@@ -115,8 +115,7 @@ struct SWONEncodeMacro: MemberMacro {
                     var item = try toSWON()
                     defer { swon_free(&item) }
                     guard let cjson = swon_encode(item) else {
-                        let message = String(cString: swon_error_ptr())
-                        throw SWONError.invalid("At \\(message)")
+                        throw SWONError.invalid("Unable to encode self")
                     }
                     let json = String(cString: cjson)
                     swon_free_string(cjson)

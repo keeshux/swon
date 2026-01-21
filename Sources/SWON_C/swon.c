@@ -24,6 +24,10 @@ swon_result swon_parse(swon_t *dst, const char *text) {
     return SWONResultValid;
 }
 
+const char *swon_parse_error_ptr() {
+    return cJSON_GetErrorPtr();
+}
+
 char *swon_encode(swon_t src) {
     return cJSON_PrintUnformatted(src.impl);
 }
@@ -148,8 +152,4 @@ bool swon_create_bool(swon_t *dst, bool value) {
 bool swon_create_string(swon_t *dst, const char *value) {
     dst->impl = cJSON_CreateString(value);
     return dst;
-}
-
-const char *swon_error_ptr() {
-    return cJSON_GetErrorPtr();
 }
