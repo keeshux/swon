@@ -22,22 +22,47 @@ struct SWONTests {
     }
 
     @Test
+    func encodingAssociatedEnums() throws {
+        @SWON
+        struct LocalContainer {
+            let enums: [AssociatedEnum]
+            init(enums: [AssociatedEnum]) {
+                self.enums = enums
+            }
+        }
+        let sub = try SubStruct(fromJSON: """
+        {
+            "favoriteColor": "red",
+            "optionalSize": 0,
+            "statusHistory": ["active"],
+            "colorToStatus": {"red": "active"},
+            "optionalColorArray": ["blue"]
+        }
+        """)
+        let sut = LocalContainer(enums: [
+            .single,
+            .singleFlat("flat"),
+            .singleKeyed(i: 100),
+            .multipleFlat(50, true),
+            .multipleKeyed(d: 70.0, b: false),
+            .multipleMixed(d: 600.0, true, foo: sub)
+        ])
+        let json = try sut.toJSON()
+        print(json)
+    }
+
+    @Test
+    func decodingAssociatedEnums() throws {
+        let json = """
+{"enums":[{"single":{}},{"singleFlat":{"_0":"flat"}},{"singleKeyed":{"i":100}},{"multipleFlat":{"_0":50,"_1":true}},{"multipleKeyed":{"d":70,"b":false}},{"multipleMixed":{"d":600,"_1":true,"foo":{"favoriteColor": "blue", "statusHistory": [], "colorToStatus": {}}}}]}
+"""
+        let sut = try LocalContainer(fromJSON: json)
+        print(json)
+        print(sut)
+    }
+
+    @Test
     func encodingStruct() throws {
-        @SWON
-        struct LocalStruct {
-            let favoriteColor: String
-            let optionalSize: Int?
-            let statusHistory: [String]
-            let colorToStatus: [String: String]
-            let another: AnotherStruct?
-            let nestedStrings: [[String]]
-            let nestedColors: [[Color]]
-        }
-        @SWON
-        struct AnotherStruct {
-            let one: Int
-            let two: Double
-        }
         let sut = try LocalStruct(fromJSON: """
 {
     "favoriteColor": "green",
@@ -72,6 +97,31 @@ struct SWONTests {
         let parsed2 = try ComplexStruct.withSWON(encoded)
         #expect(parsed == parsed2)
     }
+}
+
+@SWON
+struct LocalContainer {
+    let enums: [AssociatedEnum]
+    init(enums: [AssociatedEnum]) {
+        self.enums = enums
+    }
+}
+
+@SWON
+struct LocalStruct {
+    let favoriteColor: String
+    let optionalSize: Int?
+    let statusHistory: [String]
+    let colorToStatus: [String: String]
+    let another: AnotherStruct?
+    let nestedStrings: [[String]]
+    let nestedColors: [[Color]]
+}
+
+@SWON
+struct AnotherStruct {
+    let one: Int
+    let two: Double
 }
 
 func jsonString(fromFileNamed name: String) throws -> String {

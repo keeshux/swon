@@ -62,6 +62,23 @@ extension TypeSyntax {
     }
 }
 
+extension EnumDeclSyntax {
+    var cases: [EnumCaseDeclSyntax] {
+        memberBlock.members
+            .compactMap { member in
+                member.decl.as(EnumCaseDeclSyntax.self)
+            }
+    }
+
+    var hasAssociatedValues: Bool {
+        cases.contains { caseDecl in
+            caseDecl.elements.contains { element in
+                element.parameterClause != nil
+            }
+        }
+    }
+}
+
 struct SWONMessage: DiagnosticMessage {
     let severity: DiagnosticSeverity = .note
     let message: String

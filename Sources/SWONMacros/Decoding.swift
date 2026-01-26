@@ -28,23 +28,74 @@ struct SWONDecodeMacro: MemberMacro {
 
         var assignments: [String] = []
 
-        // Parse enum from raw value
         if let enumDecl = declaration.as(EnumDeclSyntax.self) {
-            guard let inheritance = enumDecl.inheritanceClause,
-                  let inheritedType = inheritance.inheritedTypes.first else {
-                fatalError("Enumeration must inherit a raw type")
-            }
             let enumType = enumDecl.name.text
-            let rawType = inheritedType.type.description
-//            context.diagnose(
-//                Diagnostic(
-//                    node: Syntax(node),
-//                    message: SWONMessage(message: "Raw type of enum \(enumType) is \(rawType)")
+
+            // Enum with associated values
+            if enumDecl.hasAssociatedValues {
+                let cases = enumDecl.cases
+//                context.diagnose(
+//                    Diagnostic(
+//                        node: Syntax(node),
+//                        message: SWONMessage(message: "Associated cases of enum \(enumType): \(cases.map(\.description))")
+//                    )
 //                )
-//            )
-            switch rawType {
-            case "String":
+                // FIXME: ###, Ensure root is an actual object
                 assignments.append("""
+                    let child = swon_get_map_first(root)
+                    guard let key = swon_get_map_key(child) else {
+                        throw SWONError.invalid("Unable to find enum dictionary")
+                    }
+                    """)
+
+                assignments.append("switch String(cString: key) {")
+                cases.forEach {
+                    $0.elements.forEach { el in
+                        assignments.append("case \"\(el.name)\":")
+                        guard let parms = el.parameterClause?.parameters, !parms.isEmpty else {
+                            assignments.append("self = .\(el.name)")
+                            return
+                        }
+                        var parmAssignments: [String] = []
+                        parms.enumerated().forEach { i, p in
+                            let name: String
+                            let type = p.type.decodedType(context: context)
+                            // FIXME: ###, Handle optional (replace with nil)
+                            if let firstName = p.firstName {
+                                name = firstName.description
+                                parmAssignments.append("\(name): \(name)")
+                            } else {
+                                name = "_\(i)"
+                                parmAssignments.append(name)
+                            }
+                            assignments.append("""
+                                let \(name) = try {
+                                    var dict = swon_t()
+                                    let dictResult = swon_get_object(&dict, child, "\(name)")
+                                    try dictResult.check("\(name) in \(el.name)")
+                                    \(mapItem(to: type, fieldName: "\(name) in \(el.name)", varName: "dict", nesting: 0, isOptional: false))
+                                }()
+                                """)
+                        }
+                        let parmAssignmentList = parmAssignments.joined(separator: ",")
+                        assignments.append("self = .\(el.name)(\(parmAssignmentList))")
+                    }
+                }
+                assignments.append("default: throw SWONError.invalid(\"Unknown enum case '\\(key)'\")")
+                assignments.append("}")
+            }
+            // Enum with raw value
+            else if let inheritedType = enumDecl.inheritanceClause?.inheritedTypes.first {
+                let rawType = inheritedType.type.description
+//                context.diagnose(
+//                    Diagnostic(
+//                        node: Syntax(node),
+//                        message: SWONMessage(message: "Raw type of enum \(enumType) is \(rawType)")
+//                    )
+//                )
+                switch rawType {
+                case "String":
+                    assignments.append("""
                     var str: UnsafePointer<CChar>!
                     try swon_get_string(&str, root).check("\(enumType)")
                     let rawValue = String(cString: str)
@@ -53,8 +104,8 @@ struct SWONDecodeMacro: MemberMacro {
                     }
                     self = value
                     """)
-            case "Int":
-                assignments.append("""
+                case "Int":
+                    assignments.append("""
                     var num: Int32 = 0
                     try swon_get_integer(&num, root).check("\(enumType)")
                     guard let value = \(enumType)(rawValue: Int(num)) else {
@@ -62,8 +113,9 @@ struct SWONDecodeMacro: MemberMacro {
                     }
                     self = value
                     """)
-            default:
-                fatalError("Unsupported raw type '\(rawType)'")
+                default:
+                    fatalError("Unsupported raw type '\(rawType)'")
+                }
             }
         } else {
             // Parse struct fields

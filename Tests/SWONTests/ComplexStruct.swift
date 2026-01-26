@@ -74,4 +74,15 @@ struct SubStruct: Equatable, Codable {
     let statusHistory: [Status]
     let colorToStatus: [String: Status]
     let optionalColorArray: [Color]?
+    let assEnum: [AssociatedEnum]?
+}
+
+@SWON
+enum AssociatedEnum: Equatable, Codable {
+    case single
+    case singleFlat(String)
+    case singleKeyed(i: Int)
+    case multipleFlat(Int, Bool)
+    case multipleKeyed(d: Double, b: Bool)
+    case multipleMixed(d: Double, Bool, foo: SubStruct)
 }

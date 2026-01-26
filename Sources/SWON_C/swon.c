@@ -45,6 +45,7 @@ void swon_free(swon_t *dst) {
 swon_result swon_get_object(swon_t *dst, swon_t src, const char *field) {
     cJSON *item = cJSON_GetObjectItemCaseSensitive(src.impl, field);
     SWON_RETURN_IF_NULL(item)
+    SWON_RETURN_INVALID_IF(!cJSON_IsObject(src.impl))
     dst->impl = item;
     return SWONResultValid;
 }
