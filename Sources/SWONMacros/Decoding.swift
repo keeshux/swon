@@ -59,8 +59,12 @@ struct SWONDecodeMacro: MemberMacro {
                         var parmAssignments: [String] = []
                         parms.enumerated().forEach { i, p in
                             let name: String
-                            let type = p.type.decodedType(context: context)
-                            // FIXME: ###, Handle optional (replace with nil)
+                            var type = p.type.decodedType(context: context)
+                            var isOptional = false
+                            if case .optional(let decodedType) = type {
+                                type = decodedType
+                                isOptional = true
+                            }
                             if let firstName = p.firstName {
                                 name = firstName.description
                                 parmAssignments.append("\(name): \(name)")
@@ -69,11 +73,18 @@ struct SWONDecodeMacro: MemberMacro {
                                 parmAssignments.append(name)
                             }
                             assignments.append("""
-                                let \(name) = try {
+                                let \(name): \(type.description)\(isOptional ? "?" : "") = try {
                                     var dict = swon_t()
                                     let dictResult = swon_get_object(&dict, child, "\(name)")
+                                """)
+                            if isOptional {
+                                assignments.append("""
+                                    guard dictResult != SWONResultNull else { return nil }
+                                    """)
+                            }
+                            assignments.append("""
                                     try dictResult.check("\(name) in \(el.name)")
-                                    \(mapItem(to: type, fieldName: "\(name) in \(el.name)", varName: "dict", nesting: 0, isOptional: false))
+                                    \(mapItem(to: type, fieldName: "\(name) in \(el.name)", varName: "dict", nesting: 0, isOptional: isOptional))
                                 }()
                                 """)
                         }

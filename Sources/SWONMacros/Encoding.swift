@@ -61,28 +61,40 @@ struct SWONEncodeMacro: MemberMacro {
                             continue
                         }
                         // Iterate through parameters
-                        var parmVars: [String] = []
                         var parmDeclarations: [String] = []
+                        var parmVars: [(String, Bool)] = []
                         var parmAssignments: [String] = []
                         parms.enumerated().forEach { i, p in
                             let name = p.firstName?.description ?? "_\(i)"
-                            let type = p.type.decodedType(context: context)
-                            parmVars.append(name)
+                            var type = p.type.decodedType(context: context)
+                            var isOptional = false
+                            if case .optional(let decodedType) = type {
+                                type = decodedType
+                                isOptional = true
+                            }
+                            context.diagnose(
+                                Diagnostic(
+                                    node: Syntax(node),
+                                    message: SWONMessage(message: "CASE \(enumType) -> \(type) \(isOptional)")
+                                )
+                            )
+                            parmVars.append((name, isOptional))
                             parmDeclarations.append("let \(name)")
                             parmAssignments.append(
                                 contentsOf: type.statements(
                                     forName: "\(name)JSON",
                                     element: name,
                                     pair: false,
-                                    withDeclaration: false
+                                    withDeclaration: false,
+                                    isOptional: isOptional
                                 )
                             )
                         }
                         let parmDeclarationList = parmDeclarations.joined(separator: ",")
                         assignments.append("case .\(el.name)(\(parmDeclarationList)):")
                         assignments.append("var item = swon_t()")
-                        parmVars.forEach {
-                            assignments.append("var \($0)JSON = swon_t()")
+                        parmVars.forEach { name, isOptional in
+                            assignments.append("var \(name)JSON = swon_t()")
                         }
                         assignments.append("do {")
                         assignments.append("""
@@ -91,12 +103,18 @@ struct SWONEncodeMacro: MemberMacro {
                             }
                             """)
                         assignments.append(contentsOf: parmAssignments)
-                        parmVars.forEach {
+                        parmVars.forEach { name, isOptional in
+                            if isOptional {
+                                assignments.append("if \(name) != nil {")
+                            }
                             assignments.append("""
-                                guard swon_object_add_item(&item, \"\($0)\", \($0)JSON) else {
-                                    throw SWONError.invalid("Unable to set root[\(el.name)][\($0)]")
+                                guard swon_object_add_item(&item, \"\(name)\", \(name)JSON) else {
+                                    throw SWONError.invalid("Unable to set root[\(el.name)][\(name)]")
                                 }
                                 """)
+                            if isOptional {
+                                assignments.append("}")
+                            }
                         }
                         assignments.append("""
                             guard swon_object_add_item(&root, \"\(el.name)\", item) else {
@@ -104,10 +122,10 @@ struct SWONEncodeMacro: MemberMacro {
                             }
                             """)
                         assignments.append("} catch {")
-                        assignments.append("swon_free(&item)")
-                        parmVars.forEach {
-                            assignments.append("swon_free(&\($0)JSON)")
+                        parmVars.forEach { name, isOptional in
+                            assignments.append("swon_free(&\(name)JSON)")
                         }
+                        assignments.append("swon_free(&item)")
                         assignments.append("throw error")
                         assignments.append("}")
                     }
@@ -366,11 +384,15 @@ private extension DecodedType {
         forName name: String,
         element: String,
         pair: Bool,
-        withDeclaration: Bool = true
+        withDeclaration: Bool = true,
+        isOptional: Bool = false
     ) -> [String] {
         var stmts: [String] = []
         let suffix = pair ? ".value" : ""
         var isScalar = true
+        if isOptional {
+            stmts.append("if let \(element) {")
+        }
         if withDeclaration {
             stmts.append("var \(name) = swon_t()")
         }
@@ -389,6 +411,9 @@ private extension DecodedType {
         }
         if isScalar {
             stmts.append("throw SWONError.invalid(\"Unable to create item (\(name))\")")
+            stmts.append("}")
+        }
+        if isOptional {
             stmts.append("}")
         }
         return stmts
