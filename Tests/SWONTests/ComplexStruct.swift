@@ -84,5 +84,5 @@ enum AssociatedEnum: Equatable, Codable {
     case singleKeyed(i: Int)
     case multipleFlat(Int, Bool)
     case multipleKeyed(d: Double, b: Bool)
-    case multipleMixed(d: Double, Bool, foo: SubStruct)
+    case multipleMixed(d: Double, Bool?, foo: SubStruct)
 }

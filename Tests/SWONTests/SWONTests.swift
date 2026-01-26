@@ -45,7 +45,7 @@ struct SWONTests {
             .singleKeyed(i: 100),
             .multipleFlat(50, true),
             .multipleKeyed(d: 70.0, b: false),
-            .multipleMixed(d: 600.0, true, foo: sub)
+            .multipleMixed(d: 600.0, nil, foo: sub)
         ])
         let json = try sut.toJSON()
         print(json)
@@ -54,7 +54,7 @@ struct SWONTests {
     @Test
     func decodingAssociatedEnums() throws {
         let json = """
-{"enums":[{"single":{}},{"singleFlat":{"_0":"flat"}},{"singleKeyed":{"i":100}},{"multipleFlat":{"_0":50,"_1":true}},{"multipleKeyed":{"d":70,"b":false}},{"multipleMixed":{"d":600,"_1":true,"foo":{"favoriteColor": "blue", "statusHistory": [], "colorToStatus": {}}}}]}
+{"enums":[{"single":{}},{"singleFlat":{"_0":"flat"}},{"singleKeyed":{"i":100}},{"multipleFlat":{"_0":50,"_1":true}},{"multipleKeyed":{"d":70,"b":false}},{"multipleMixed":{"d":600,"foo":{"favoriteColor": "blue", "statusHistory": [], "colorToStatus": {}}}}]}
 """
         let sut = try LocalContainer(fromJSON: json)
         print(json)
