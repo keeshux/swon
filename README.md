@@ -62,7 +62,6 @@ SWON uses the amazingly written [cJSON][credits-cjson] parser (C) under the hood
 
 ### Things to do
 
-- Enums with default associated values.
 - Do not suppress errors inside an optional field (silently made nil).
 
 ## License
