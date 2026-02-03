@@ -12,7 +12,7 @@
 )
 public macro SWON() = #externalMacro(
     module: "SWONMacros",
-    type: "SWONMacro"
+    type: "SWONCompoundMacro"
 )
 
 public enum SWONError: Error {

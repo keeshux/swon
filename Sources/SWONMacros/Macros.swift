@@ -9,13 +9,11 @@ import SwiftSyntaxMacros
 @main
 struct SWONMacrosPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
-        SWONMacro.self,
-        SWONEncodeMacro.self,
-        SWONDecodeMacro.self
+        SWONCompoundMacro.self
     ]
 }
 
-public struct SWONMacro: MemberMacro {
+public struct SWONCompoundMacro: MemberMacro {
     public static func expansion(
         of node: AttributeSyntax,
         providingMembersOf declaration: some DeclGroupSyntax,
