@@ -53,6 +53,12 @@ target_compile_options(SWONInterface INTERFACE
 )
 target_link_libraries(SWONInterface INTERFACE SWON)
 
-# Sample executable
-add_executable(SWONTest ${CMAKE_CURRENT_SOURCE_DIR}/main.swift)
-target_link_libraries(SWONTest SWONInterface)
+# Sample executables
+file(GLOB_RECURSE EXAMPLES_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/Examples/*.swift
+)
+add_executable(swon_examples ${EXAMPLES_SOURCES})
+set_target_properties(swon_examples PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin
+)
+target_link_libraries(swon_examples SWONInterface)
