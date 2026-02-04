@@ -4,7 +4,7 @@ Foundation-free Swift/JSON processing.
 
 SWON is a tiny set of [Swift Macros][swift-macros] that extend value types with simplified JSON processing without the need for `Codable` or the Foundation framework.
 
-SWON should work on every supported Swift platform. Tested on Apple, Android, Linux, and Windows.
+SWON should work on every supported Swift platform. Tested on Apple, Android, Linux, and Windows. It can be used with both SwiftPM and CMake.
 
 ## Usage
 
@@ -39,6 +39,10 @@ let foobar = try Foobar(fromJSON: """
 }
 """)
 ```
+
+### Examples
+
+The CMake configuration emits sample executables from the Swift files found in `Examples`. Run `scripts/build.sh` to generate them under the `bin` directory.
 
 ## Why?
 
