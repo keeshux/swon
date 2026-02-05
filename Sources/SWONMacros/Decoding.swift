@@ -66,8 +66,14 @@ struct SWONDecodeMacro: MemberMacro {
                                 isOptional = true
                             }
                             if let firstName = p.firstName {
-                                name = firstName.description
-                                parmAssignments.append("\(name): \(name)")
+                                if firstName.tokenKind == .wildcard,
+                                   let secondName = p.secondName {
+                                    name = secondName.description
+                                    parmAssignments.append("\(name)")
+                                } else {
+                                    name = firstName.description
+                                    parmAssignments.append("\(name): \(name)")
+                                }
                             } else {
                                 name = "_\(i)"
                                 parmAssignments.append(name)
@@ -83,8 +89,8 @@ struct SWONDecodeMacro: MemberMacro {
                                     """)
                             }
                             assignments.append("""
-                                    try dictResult.check("\(name) in \(el.name)")
-                                    \(mapItem(to: type, fieldName: "\(name) in \(el.name)", varName: "dict", nesting: 0, isOptional: isOptional))
+                                try dictResult.check("\(name) in \(el.name)")
+                                \(mapItem(to: type, fieldName: "\(name) in \(el.name)", varName: "dict", nesting: 0, isOptional: isOptional))
                                 }()
                                 """)
                         }

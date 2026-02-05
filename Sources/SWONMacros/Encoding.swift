@@ -65,19 +65,29 @@ struct SWONEncodeMacro: MemberMacro {
                         var parmVars: [(String, Bool)] = []
                         var parmAssignments: [String] = []
                         parms.enumerated().forEach { i, p in
-                            let name = p.firstName?.description ?? "_\(i)"
+                            let name: String
+                            if let firstName = p.firstName {
+                                if firstName.tokenKind == .wildcard,
+                                   let secondName = p.secondName {
+                                    name = secondName.description
+                                } else {
+                                    name = firstName.description
+                                }
+                            } else {
+                                name = "_\(i)"
+                            }
                             var type = p.type.decodedType(context: context)
                             var isOptional = false
                             if case .optional(let decodedType) = type {
                                 type = decodedType
                                 isOptional = true
                             }
-                            context.diagnose(
-                                Diagnostic(
-                                    node: Syntax(node),
-                                    message: SWONMessage(message: "CASE \(enumType) -> \(type) \(isOptional)")
-                                )
-                            )
+//                            context.diagnose(
+//                                Diagnostic(
+//                                    node: Syntax(node),
+//                                    message: SWONMessage(message: "CASE \(enumType) -> \(type) \(isOptional)")
+//                                )
+//                            )
                             parmVars.append((name, isOptional))
                             parmDeclarations.append("let \(name)")
                             parmAssignments.append(
