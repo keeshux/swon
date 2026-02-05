@@ -86,3 +86,13 @@ struct SWONMessage: DiagnosticMessage {
         MessageID(domain: "SWONMessage", id: "debug")
     }
 }
+
+extension String {
+    var trimmingTrailingWhitespaces: String {
+        var copy = self
+        while copy.last == " " {
+            copy.removeLast()
+        }
+        return copy
+    }
+}

@@ -97,7 +97,7 @@ struct SWONDecodeMacro: MemberMacro {
             }
             // Enum with raw value
             else if let inheritedType = enumDecl.inheritanceClause?.inheritedTypes.first {
-                let rawType = inheritedType.type.description
+                let rawType = inheritedType.type.description.trimmingTrailingWhitespaces
 //                context.diagnose(
 //                    Diagnostic(
 //                        node: Syntax(node),
@@ -115,11 +115,11 @@ struct SWONDecodeMacro: MemberMacro {
                     }
                     self = value
                     """)
-                case "Int":
+                case "Int", "UInt":
                     assignments.append("""
                     var num: Int32 = 0
                     try swon_get_integer(&num, root).check("\(enumType)")
-                    guard let value = \(enumType)(rawValue: Int(num)) else {
+                    guard let value = \(enumType)(rawValue: \(rawType)(num)) else {
                         throw SWONError.invalid("\(enumType).\\(num)")
                     }
                     self = value

@@ -134,7 +134,7 @@ struct SWONEncodeMacro: MemberMacro {
             }
             // Enum with raw value
             else if let inheritedType = enumDecl.inheritanceClause?.inheritedTypes.first {
-                let rawType = inheritedType.type.description
+                let rawType = inheritedType.type.description.trimmingTrailingWhitespaces
 //                context.diagnose(
 //                    Diagnostic(
 //                        node: Syntax(node),
@@ -149,11 +149,11 @@ struct SWONEncodeMacro: MemberMacro {
                         throw SWONError.invalid("\(enumType)(String)")
                     }
                     """)
-                case "Int":
+                case "Int", "UInt":
                     assignments.append("""
                     var root = swon_t()
                     guard swon_create_number(&root, Double(rawValue)) else {
-                        throw SWONError.invalid("\(enumType)(Int)")
+                        throw SWONError.invalid("\(enumType)(\(rawType))")
                     }
                     """)
                 default:
