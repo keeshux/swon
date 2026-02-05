@@ -155,12 +155,12 @@ struct SWONDecodeMacro: MemberMacro {
         }
         return [
             DeclSyntax(stringLiteral: """
-                init(fromSWON root: swon_t) throws {
+                public init(fromSWON root: swon_t) throws {
                     \(assignments.joined(separator: "\n"))
                 }
                 """),
             DeclSyntax(stringLiteral: """
-                init(fromJSON json: String) throws {
+                public init(fromJSON json: String) throws {
                     var root = swon_t()
                     defer { swon_free(&root) }
                     guard swon_parse(&root, json) == SWONResultValid else {

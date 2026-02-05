@@ -194,7 +194,7 @@ struct SWONEncodeMacro: MemberMacro {
 //        )
         return [
             DeclSyntax(stringLiteral: """
-                func toSWON() throws -> swon_t {
+                public func toSWON() throws -> swon_t {
                     var root = swon_t()
                     guard swon_create_object(&root) else {
                         throw SWONError.invalid("Unable to create root")
@@ -208,7 +208,7 @@ struct SWONEncodeMacro: MemberMacro {
                 }
                 """),
             DeclSyntax(stringLiteral: """
-                func toJSON() throws -> String {
+                public func toJSON() throws -> String {
                     var item = try toSWON()
                     defer { swon_free(&item) }
                     guard let cjson = swon_encode(item) else {
