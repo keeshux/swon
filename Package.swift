@@ -5,7 +5,7 @@ import PackageDescription
 import CompilerPluginSupport
 
 let package = Package(
-    name: "SWON",
+    name: "swon",
     platforms: [
         .macOS(.v10_15),
         .iOS(.v13),
@@ -15,7 +15,7 @@ let package = Package(
     ],
     products: [
         .library(
-            name: "SWON",
+            name: "swon",
             targets: ["SWON"]
         )
     ],
