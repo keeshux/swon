@@ -115,7 +115,8 @@ struct SWONDecodeMacro: MemberMacro {
                     }
                     self = value
                     """)
-                case "Int", "UInt":
+                case "Int", "Int8", "Int16", "Int32", "Int64",
+                    "UInt", "UInt8", "UInt16", "UInt32", "UInt64":
                     assignments.append("""
                     var num: Int32 = 0
                     try swon_get_integer(&num, root).check("\(enumType)")
@@ -196,12 +197,13 @@ private extension SWONDecodeMacro {
                     \(checkExpr)
                     return String(cString: str)
                     """
-            case "Int":
+            case "Int", "Int8", "Int16", "Int32", "Int64",
+                "UInt", "UInt8", "UInt16", "UInt32", "UInt64":
                 return """
                     var num: Int32 = 0
                     let result = swon_get_integer(&num, \(varName))
                     \(checkExpr)
-                    return Int(num)
+                    return \(typeName)(num)
                     """
             case "Double":
                 return """
