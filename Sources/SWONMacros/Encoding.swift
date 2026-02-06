@@ -192,9 +192,10 @@ struct SWONEncodeMacro: MemberMacro {
 //                message: SWONMessage(message: "Assignments: \(assignments)")
 //            )
 //        )
+        let accessLevel = declaration.modifiers.accessLevel
         return [
             DeclSyntax(stringLiteral: """
-                public func toSWON() throws -> swon_t {
+                \(accessLevel) func toSWON() throws -> swon_t {
                     var root = swon_t()
                     guard swon_create_object(&root) else {
                         throw SWONError.invalid("Unable to create root")
@@ -208,7 +209,7 @@ struct SWONEncodeMacro: MemberMacro {
                 }
                 """),
             DeclSyntax(stringLiteral: """
-                public func toJSON() throws -> String {
+                \(accessLevel) func toJSON() throws -> String {
                     var item = try toSWON()
                     defer { swon_free(&item) }
                     guard let cjson = swon_encode(item) else {
