@@ -66,8 +66,14 @@ struct SWONDecodeMacro: MemberMacro {
                                 isOptional = true
                             }
                             if let firstName = p.firstName {
-                                name = firstName.description
-                                parmAssignments.append("\(name): \(name)")
+                                if firstName.tokenKind == .wildcard,
+                                   let secondName = p.secondName {
+                                    name = secondName.description
+                                    parmAssignments.append("\(name)")
+                                } else {
+                                    name = firstName.description
+                                    parmAssignments.append("\(name): \(name)")
+                                }
                             } else {
                                 name = "_\(i)"
                                 parmAssignments.append(name)
@@ -83,8 +89,8 @@ struct SWONDecodeMacro: MemberMacro {
                                     """)
                             }
                             assignments.append("""
-                                    try dictResult.check("\(name) in \(el.name)")
-                                    \(mapItem(to: type, fieldName: "\(name) in \(el.name)", varName: "dict", nesting: 0, isOptional: isOptional))
+                                try dictResult.check("\(name) in \(el.name)")
+                                \(mapItem(to: type, fieldName: "\(name) in \(el.name)", varName: "dict", nesting: 0, isOptional: isOptional))
                                 }()
                                 """)
                         }
@@ -115,7 +121,8 @@ struct SWONDecodeMacro: MemberMacro {
                     }
                     self = value
                     """)
-                case "Int", "UInt":
+                case "Int", "Int8", "Int16", "Int32", "Int64",
+                    "UInt", "UInt8", "UInt16", "UInt32", "UInt64":
                     assignments.append("""
                     var num: Int32 = 0
                     try swon_get_integer(&num, root).check("\(enumType)")
@@ -131,6 +138,10 @@ struct SWONDecodeMacro: MemberMacro {
         } else {
             // Parse struct fields
             for prop in properties {
+                // Skip computed properties
+                guard prop.bindings.allSatisfy({ !$0.isComputed }) else {
+                    continue
+                }
                 guard let field = prop.bindings.first?.pattern.as(IdentifierPatternSyntax.self)?.identifier.text else {
                     continue
                 }
@@ -197,12 +208,13 @@ private extension SWONDecodeMacro {
                     \(checkExpr)
                     return String(cString: str)
                     """
-            case "Int":
+            case "Int", "Int8", "Int16", "Int32", "Int64",
+                "UInt", "UInt8", "UInt16", "UInt32", "UInt64":
                 return """
                     var num: Int32 = 0
                     let result = swon_get_integer(&num, \(varName))
                     \(checkExpr)
-                    return Int(num)
+                    return \(typeName)(num)
                     """
             case "Double":
                 return """

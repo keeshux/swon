@@ -65,19 +65,29 @@ struct SWONEncodeMacro: MemberMacro {
                         var parmVars: [(String, Bool)] = []
                         var parmAssignments: [String] = []
                         parms.enumerated().forEach { i, p in
-                            let name = p.firstName?.description ?? "_\(i)"
+                            let name: String
+                            if let firstName = p.firstName {
+                                if firstName.tokenKind == .wildcard,
+                                   let secondName = p.secondName {
+                                    name = secondName.description
+                                } else {
+                                    name = firstName.description
+                                }
+                            } else {
+                                name = "_\(i)"
+                            }
                             var type = p.type.decodedType(context: context)
                             var isOptional = false
                             if case .optional(let decodedType) = type {
                                 type = decodedType
                                 isOptional = true
                             }
-                            context.diagnose(
-                                Diagnostic(
-                                    node: Syntax(node),
-                                    message: SWONMessage(message: "CASE \(enumType) -> \(type) \(isOptional)")
-                                )
-                            )
+//                            context.diagnose(
+//                                Diagnostic(
+//                                    node: Syntax(node),
+//                                    message: SWONMessage(message: "CASE \(enumType) -> \(type) \(isOptional)")
+//                                )
+//                            )
                             parmVars.append((name, isOptional))
                             parmDeclarations.append("let \(name)")
                             parmAssignments.append(
@@ -149,7 +159,8 @@ struct SWONEncodeMacro: MemberMacro {
                         throw SWONError.invalid("\(enumType)(String)")
                     }
                     """)
-                case "Int", "UInt":
+                case "Int", "Int8", "Int16", "Int32", "Int64",
+                    "UInt", "UInt8", "UInt16", "UInt32", "UInt64":
                     assignments.append("""
                     var root = swon_t()
                     guard swon_create_number(&root, Double(rawValue)) else {
@@ -163,6 +174,10 @@ struct SWONEncodeMacro: MemberMacro {
         } else {
             // Struct fields
             for prop in properties {
+                // Skip computed properties
+                guard prop.bindings.allSatisfy({ !$0.isComputed }) else {
+                    continue
+                }
                 guard let field = prop.bindings.first?.pattern.as(IdentifierPatternSyntax.self)?.identifier.text else {
                     continue
                 }
@@ -400,7 +415,8 @@ private extension DecodedType {
         switch description {
         case "Bool":
             stmts.append("guard swon_create_bool(&\(name), \(element)\(suffix)) else {")
-        case "Int":
+        case "Int", "Int8", "Int16", "Int32", "Int64",
+            "UInt", "UInt8", "UInt16", "UInt32", "UInt64":
             stmts.append("guard swon_create_number(&\(name), Double(\(element)\(suffix))) else {")
         case "Double":
             stmts.append("guard swon_create_number(&\(name), \(element)\(suffix)) else {")

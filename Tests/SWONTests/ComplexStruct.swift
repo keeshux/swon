@@ -50,6 +50,8 @@ struct ComplexStruct: Equatable, Codable {
     let stringToSubStruct: [String: SubStruct]
     let optionalStringToSubStruct: [String: SubStruct]?
     let optionalStringToSubStructArray: [String: [SubStruct]]?
+
+    let uint16: UInt16?
 }
 
 @SWON
@@ -85,4 +87,5 @@ enum AssociatedEnum: Equatable, Codable {
     case multipleFlat(Int, Bool)
     case multipleKeyed(d: Double, b: Bool)
     case multipleMixed(d: Double, Bool?, foo: SubStruct)
+    case multipleUnnamed(named: Int, _ anon: Int)
 }

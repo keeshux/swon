@@ -99,6 +99,12 @@ extension DeclModifierListSyntax {
     }
 }
 
+extension PatternBindingSyntax {
+    var isComputed: Bool {
+        accessorBlock != nil
+    }
+}
+
 struct SWONMessage: DiagnosticMessage {
     let severity: DiagnosticSeverity = .note
     let message: String
