@@ -79,6 +79,26 @@ extension EnumDeclSyntax {
     }
 }
 
+extension DeclModifierListSyntax {
+    var accessLevel: String {
+        for modifier in self {
+            switch modifier.name.tokenKind {
+            case .keyword(.public):
+                return "public"
+            case .keyword(.internal):
+                return "internal"
+            case .keyword(.fileprivate):
+                return "fileprivate"
+            case .keyword(.private):
+                return "private"
+            default:
+                continue
+            }
+        }
+        return ""
+    }
+}
+
 extension PatternBindingSyntax {
     var isComputed: Bool {
         accessorBlock != nil

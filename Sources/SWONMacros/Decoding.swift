@@ -164,14 +164,15 @@ struct SWONDecodeMacro: MemberMacro {
             """)
             }
         }
+        let accessLevel = declaration.modifiers.accessLevel
         return [
             DeclSyntax(stringLiteral: """
-                init(fromSWON root: swon_t) throws {
+                \(accessLevel) init(fromSWON root: swon_t) throws {
                     \(assignments.joined(separator: "\n"))
                 }
                 """),
             DeclSyntax(stringLiteral: """
-                init(fromJSON json: String) throws {
+                \(accessLevel) init(fromJSON json: String) throws {
                     var root = swon_t()
                     defer { swon_free(&root) }
                     guard swon_parse(&root, json) == SWONResultValid else {
