@@ -50,6 +50,8 @@ struct ComplexStruct: Equatable, Codable {
     let stringToSubStruct: [String: SubStruct]
     let optionalStringToSubStruct: [String: SubStruct]?
     let optionalStringToSubStructArray: [String: [SubStruct]]?
+
+    let uint16: UInt16?
 }
 
 @SWON

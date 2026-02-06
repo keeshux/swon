@@ -149,7 +149,8 @@ struct SWONEncodeMacro: MemberMacro {
                         throw SWONError.invalid("\(enumType)(String)")
                     }
                     """)
-                case "Int", "UInt":
+                case "Int", "Int8", "Int16", "Int32", "Int64",
+                    "UInt", "UInt8", "UInt16", "UInt32", "UInt64":
                     assignments.append("""
                     var root = swon_t()
                     guard swon_create_number(&root, Double(rawValue)) else {
@@ -399,7 +400,8 @@ private extension DecodedType {
         switch description {
         case "Bool":
             stmts.append("guard swon_create_bool(&\(name), \(element)\(suffix)) else {")
-        case "Int":
+        case "Int", "Int8", "Int16", "Int32", "Int64",
+            "UInt", "UInt8", "UInt16", "UInt32", "UInt64":
             stmts.append("guard swon_create_number(&\(name), Double(\(element)\(suffix))) else {")
         case "Double":
             stmts.append("guard swon_create_number(&\(name), \(element)\(suffix)) else {")
