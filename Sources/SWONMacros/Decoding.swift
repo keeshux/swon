@@ -132,6 +132,10 @@ struct SWONDecodeMacro: MemberMacro {
         } else {
             // Parse struct fields
             for prop in properties {
+                // Skip computed properties
+                guard prop.bindings.allSatisfy({ !$0.isComputed }) else {
+                    continue
+                }
                 guard let field = prop.bindings.first?.pattern.as(IdentifierPatternSyntax.self)?.identifier.text else {
                     continue
                 }
