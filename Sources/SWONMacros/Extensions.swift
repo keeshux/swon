@@ -25,7 +25,9 @@ extension Array: SWONDecodable, SWONEncodable where Element: SWONDecodable & SWO
         guard swon_create_array(&root) else { throw SWONError.invalid("Array") }
         for el in list {
             let item = try el.toSWON()
-            swon_array_add_item(&root, item)
+            guard swon_array_add_item(&root, item) else {
+                throw SWONError.invalid("Array: Element")
+            }
         }
         return root
     }
