@@ -66,8 +66,9 @@ SWON uses the amazingly written [cJSON][credits-cjson] parser (C) under the hood
 
 ### Things to do
 
+- Handle `RawRepresentable` automatically.
 - Do not suppress errors inside an optional field (silently made nil).
-- Add thorough tests add meaningful examples.
+- Add thorough tests and meaningful examples.
 - Clean up some messy code.
 
 ## License

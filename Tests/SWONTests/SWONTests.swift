@@ -23,13 +23,6 @@ struct SWONTests {
 
     @Test
     func encodingAssociatedEnums() throws {
-        @SWON
-        struct LocalContainer {
-            let enums: [AssociatedEnum]
-            init(enums: [AssociatedEnum]) {
-                self.enums = enums
-            }
-        }
         let sub = try SubStruct(fromJSON: """
         {
             "favoriteColor": "red",
@@ -81,7 +74,8 @@ struct SWONTests {
     "nestedColors": [
         ["green", "blue"],
         ["red", "red", "green"]
-    ]
+    ],
+    "colorSet": ["red", "green"]
 }
 """)
         print(try sut.toJSON())
@@ -116,6 +110,7 @@ struct LocalStruct {
     let another: AnotherStruct?
     let nestedStrings: [[String]]
     let nestedColors: [[Color]]
+    let colorSet: Set<Color>
 }
 
 @SWON
