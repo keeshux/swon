@@ -128,7 +128,7 @@ bool swon_array_add_item(swon_t *dst, swon_t item) {
 
 bool swon_create_object(swon_t *dst) {
     dst->impl = cJSON_CreateObject();
-    return dst->impl;
+    return dst->impl != NULL;
 }
 
 bool swon_object_add_item(swon_t *dst, const char *field, swon_t item) {
@@ -137,20 +137,20 @@ bool swon_object_add_item(swon_t *dst, const char *field, swon_t item) {
 
 bool swon_create_number(swon_t *dst, double value) {
     dst->impl = cJSON_CreateNumber(value);
-    return dst;
+    return dst->impl != NULL;
 }
 
 bool swon_create_integer(swon_t *dst, int value) {
     dst->impl = cJSON_CreateNumber(value);
-    return dst;
+    return dst->impl != NULL;
 }
 
 bool swon_create_bool(swon_t *dst, bool value) {
     dst->impl = cJSON_CreateBool(value);
-    return dst;
+    return dst->impl != NULL;
 }
 
 bool swon_create_string(swon_t *dst, const char *value) {
     dst->impl = cJSON_CreateString(value);
-    return dst;
+    return dst->impl != NULL;
 }
