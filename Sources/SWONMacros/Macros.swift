@@ -45,12 +45,12 @@ public struct SWONCompoundMacro: MemberMacro, ExtensionMacro {
         in context: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
         let typeName = type.description
-        context.diagnose(
-            Diagnostic(
-                node: Syntax(node),
-                message: SWONMessage(message: "FQN = \(typeName)")
-            )
-        )
+        // context.diagnose(
+        //     Diagnostic(
+        //         node: Syntax(node),
+        //         message: SWONMessage(message: "FQN = \(typeName)")
+        //     )
+        // )
         let ext = try ExtensionDeclSyntax(
             "extension \(raw: typeName): SWONDecodable, SWONEncodable {}"
         )

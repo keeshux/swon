@@ -20,6 +20,8 @@ target_include_directories(SWON_C PRIVATE
 )
 add_library(SWON STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/Sources/SWON/SWON.swift
+    ${CMAKE_CURRENT_SOURCE_DIR}/Sources/SWON/Extensions.swift
+    ${CMAKE_CURRENT_SOURCE_DIR}/Sources/SWON/Protocols.swift
 )
 target_include_directories(SWON PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Sources/SWON_C/include
