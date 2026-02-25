@@ -4,6 +4,13 @@
 
 import SWON
 
+struct Parent {
+    @SWON
+    struct Child {
+        let field: Int
+    }
+}
+
 @SWON
 struct ComplexStruct: Equatable, Codable {
     // Primitive types
