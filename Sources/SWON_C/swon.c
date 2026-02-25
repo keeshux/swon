@@ -119,7 +119,7 @@ swon_t swon_get_map_next(swon_t src) {
 
 bool swon_create_array(swon_t *dst) {
     dst->impl = cJSON_CreateArray();
-    return dst->impl;
+    return dst->impl != NULL;
 }
 
 bool swon_array_add_item(swon_t *dst, swon_t item) {
