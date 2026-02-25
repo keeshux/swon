@@ -52,6 +52,9 @@ struct ComplexStruct: Equatable, Codable {
     let optionalStringToSubStructArray: [String: [SubStruct]]?
 
     let uint16: UInt16?
+
+    // Set
+    let someSet: Set<Color>?
 }
 
 @SWON

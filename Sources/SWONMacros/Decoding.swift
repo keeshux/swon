@@ -151,7 +151,7 @@ struct SWONDecodeMacro: MemberMacro {
 //                context.diagnose(
 //                    Diagnostic(
 //                        node: Syntax(node),
-//                        message: SWONMessage(message: "Assigning \(field) of type \(type)")
+//                        message: SWONMessage(message: "Assigning \(field) of type \(type) (decoded: \(type.decodedType(context: context)))")
 //                    )
 //                )
                 assignments.append("""
