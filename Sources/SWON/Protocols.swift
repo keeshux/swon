@@ -2,8 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-import SWON
-
 public protocol SWONEncodable {
     func toSWON() throws -> swon_t
 }

@@ -2,8 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-import SWON
-
 extension Array: SWONDecodable, SWONEncodable where Element: SWONDecodable & SWONEncodable {
     public init(fromSWON root: swon_t) throws {
         var list: [Element] = []
