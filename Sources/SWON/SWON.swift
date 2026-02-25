@@ -10,6 +10,10 @@
             named(toSWON),
             named(toJSON)
 )
+@attached(
+    extension,
+    conformances: SWONEncodable, SWONDecodable
+)
 public macro SWON() = #externalMacro(
     module: "SWONMacros",
     type: "SWONCompoundMacro"
