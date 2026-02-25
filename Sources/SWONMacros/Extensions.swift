@@ -1,0 +1,42 @@
+// SPDX-FileCopyrightText: 2026 Davide De Rosa
+//
+// SPDX-License-Identifier: MIT
+
+import SWON
+
+extension Array: SWONDecodable, SWONEncodable where Element: SWONDecodable & SWONEncodable {
+    public init(fromSWON root: swon_t) throws {
+        var list: [Element] = []
+        let root = swon_t()
+        let size = swon_get_array_size(root)
+        for i in 0..<size {
+            var item = swon_t()
+            let result = swon_get_array_item(&item, root, Int32(i))
+            guard result == SWONResultValid else { throw SWONError.invalid("Array") }
+            let el = try Element(fromSWON: item)
+            list.append(el)
+        }
+        self = list
+    }
+
+    public func toSWON() throws -> swon_t {
+        let list = Array(self)
+        var root = swon_t()
+        guard swon_create_array(&root) else { throw SWONError.invalid("Array") }
+        for el in list {
+            let item = try el.toSWON()
+            swon_array_add_item(&root, item)
+        }
+        return root
+    }
+}
+
+extension Set: SWONDecodable, SWONEncodable where Element: SWONDecodable & SWONEncodable {
+    public init(fromSWON root: swon_t) throws {
+        self = try Set(Array(fromSWON: root))
+    }
+
+    public func toSWON() throws -> swon_t {
+        try Array(self).toSWON()
+    }
+}
